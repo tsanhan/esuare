@@ -1,0 +1,7 @@
+.navbar-row {
+    display: flex;
+}
+
+.navbar-row .navbar-space {
+    margin-left: 2rem;
+}

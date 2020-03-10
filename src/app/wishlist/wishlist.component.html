@@ -1,0 +1,17 @@
+<div class="list-wrapper">
+    <ng-container  *ngIf="(booksList.favBooksSub | async).size ; else empty">
+        <mat-list >
+            <mat-divider></mat-divider>
+            <mat-list-item class="list-item" *ngFor="let item of booksList.favBooksSub | async" >
+                <div class="volume-title">{{item.volumeInfo.title}}</div>
+                <button mat-button  class="navbar-space" color="danger" (click)="booksList.removeFavorite(item)">Remove</button>
+                <mat-divider></mat-divider>
+                <!-- <button mat-button> </button> -->
+            </mat-list-item>
+        </mat-list>
+    </ng-container>
+</div>
+
+<ng-template #empty>
+    <h1 class="center">List Empty</h1>
+</ng-template>

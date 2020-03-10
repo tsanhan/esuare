@@ -1,0 +1,28 @@
+<mat-card class="welcome-card">
+    <mat-card-header>
+      <mat-card-title>Main Page</mat-card-title>
+      <mat-card-subtitle>Google Books API</mat-card-subtitle>
+    </mat-card-header>
+    <img mat-card-image src="assets\hiclipart.com.png" alt="Photo of a Shiba Inu">
+    <mat-card-content>
+      <p>
+        please enter user name:
+      </p>
+      <form [formGroup]='nameFG' class="example-form" (submit)="updateUserName()">
+        <mat-form-field class="example-full-width">
+          <mat-label>Eser Name</mat-label>
+          <input matInput formControlName="name" placeholder="Ex. John Doe">
+          <mat-error *ngIf="nameFG.get('name').hasError('empty') && !nameFG.get('name').hasError('required')">
+            the name must have at least one non-space character
+          </mat-error>
+          <mat-error *ngIf="nameFG.get('name').hasError('required')">
+            name is <strong>required</strong>
+          </mat-error>
+        </mat-form-field>
+        <mat-card-actions>
+            <button type="submit"  mat-button disabled='{{!nameFG.valid}}'>Update Name</button>
+          </mat-card-actions>
+      </form>
+    </mat-card-content>
+    
+  </mat-card>

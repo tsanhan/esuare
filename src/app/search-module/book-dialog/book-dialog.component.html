@@ -1,0 +1,25 @@
+
+
+<div mat-dialog-content>
+    <mat-card class="example-card" mat-dialog-content>
+        <mat-card-header>
+          
+          <mat-card-title>{{data.volumeInfo.title}}</mat-card-title>
+          <mat-card-subtitle><h1>authors</h1>
+            <ol>
+                <li *ngFor="let item of data.volumeInfo.authors">{{item}}</li>
+            </ol>
+        </mat-card-subtitle>
+        </mat-card-header>
+        <img mat-card-image class="dialog-image" src="{{data.volumeInfo.imageLinks ? data.volumeInfo.imageLinks.thumbnail : '/assets/no_cover_thumb.gif'}}" alt="{{data.volumeInfo.title}}">
+        <mat-card-content>
+          <p> {{data.volumeInfo.description}}</p>
+        </mat-card-content>
+        
+      </mat-card>
+</div>
+<div mat-dialog-actions>
+    Add To Favorites?
+    <button mat-button (click)="onNoClick()">No</button>
+    <button mat-button [mat-dialog-close]="data" cdkFocusInitial>Yes</button>
+</div>
