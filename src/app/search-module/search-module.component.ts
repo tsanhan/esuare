@@ -1,8 +1,8 @@
-import { Component, OnInit, ChangeDetectionStrategy, ViewChild, ElementRef } from '@angular/core';
-import { Observable, BehaviorSubject, Observer } from 'rxjs';
+import { Component, OnInit, ChangeDetectionStrategy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Observable, BehaviorSubject, Observer, fromEvent, from, of, combineLatest } from 'rxjs';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { BooksListService } from '../services/books-list.service';
-import { tap, map } from 'rxjs/operators';
+import { tap, debounceTime, switchMap, distinctUntilChanged, mergeAll, map } from 'rxjs/operators';
 import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material/dialog';
 import { BookDialogComponent } from './book-dialog/book-dialog.component';
 import { ISearch } from '../models/search.interface';
@@ -13,54 +13,59 @@ import { ISearch } from '../models/search.interface';
   styleUrls: ['./search-module.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class SearchModuleComponent implements OnInit {
+export class SearchModuleComponent implements OnInit, AfterViewInit {
 
   public faSearch = faSearch;
-  public data:Observable<any>;
+  public data:any;
   public spinner: BehaviorSubject<boolean> = new BehaviorSubject(false);
   public selected: null;
 
   @ViewChild('searchInput') searchInput :ElementRef;
+  paganatorData: BehaviorSubject<any> = new BehaviorSubject(null);
   constructor(private booksList: BooksListService, public dialog: MatDialog) { }
   
   public pageSize:number = 20; 
   public pageIndex:number = 0; 
+  private numInCombine: number = 0;
   
-  ngOnInit(): void {}
 
-  private updateData() {
-    let search:ISearch = {
-      pageSize: this.pageSize,
-      searchTerm: this.searchInput.nativeElement.value,
-      startIndex: this.pageIndex
-    }
-    this.data = this.booksList.getData(search).pipe(
-      tap<any>(x => this.spinner.next(false))
-    );
-  }
+  ngAfterViewInit(): void {
+    //Called after ngAfterContentInit when the component's view has been initialized. Applies to components only.
+    //Add 'implements AfterViewInit' to the class.
+   combineLatest(
+    fromEvent(<HTMLInputElement>this.searchInput.nativeElement, "keyup").pipe(
+      tap<any>(x => this.numInCombine = 0), 
+      tap<any>(x => this.spinner.next(true)),
+       debounceTime(1000),
+       switchMap(x => {
+         
+          return this.booksList.getData({
+            pageSize: this.pageSize,
+            searchTerm: this.searchInput.nativeElement.value,
+            startIndex: this.pageIndex
+           });
+        }),
+       tap<any>(x => this.spinner.next(false)),
+      ),
+      this.paganatorData.pipe(
+        tap<any>(x => this.numInCombine = 1), 
+        tap<any>(x => this.spinner.next(true)),
+        switchMap(x => {
+          this.pageSize = x?.pageSize || this.pageSize;
+          this.pageIndex = x?.pageIndex || this.pageIndex;
 
-  onSearch() {
-    this.spinner.next(true);
-    this.updateData();
+          return this.booksList.getData({
+            pageSize: this.pageSize,
+            searchTerm: this.searchInput.nativeElement.value,
+            startIndex: this.pageIndex
+           })
+        }),
+        tap<any>(x => this.spinner.next(false)),
+      )
+    ).subscribe(x => {
+      this.data = x[this.numInCombine];
+    })
   }
-    onSelectBook(item:any) {
-    this.selected = item;
-    const dialogRef = this.dialog.open(BookDialogComponent, {
-      width: 'min-content',
-      minWidth:'24%',
-      data: this.selected
-    });
-    dialogRef.afterClosed().subscribe(result => {
-      if(result){
-        this.booksList.favBooks.add(result);
-      }
-      
-    });
-  }
-
-  onPageChage($event:any) {
-    this.pageSize = $event.pageSize;
-    this.pageIndex = $event.pageIndex;
-    this.updateData();
+  ngOnInit(): void {
   }
 }

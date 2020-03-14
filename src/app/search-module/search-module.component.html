@@ -1,24 +1,29 @@
 <div class="search-bar-wrapper" style="margin:auto;max-width:300px">
-    <input #searchInput (keyup)="onSearch()" type="text" placeholder="Search.." name="search">
+    <input #searchInput type="text" placeholder="Search.." name="search">
     <button  type="button"><fa-icon [icon]="faSearch"></fa-icon></button>
 </div>
 <div class="list-wrapper">
-    <ng-container *ngIf="data|async ; else loading">
+    <ng-container *ngIf="!(spinner | async); else loading">
         <mat-list >
             <mat-divider></mat-divider>
-            <mat-list-item class="list-item" (click)="onSelectBook(item)" *ngFor="let item of (data | async)?.items" >
+            <mat-list-item class="list-item" (click)="onSelectBook(item)" *ngFor="let item of data?.items" >
                 {{item.volumeInfo.title}}
                 <mat-divider></mat-divider>
                 <!-- <button mat-button> </button> -->
             </mat-list-item>
         </mat-list>
-        <mat-paginator
-                [length]="(data|async)?.totalItems"
-                [pageSize]="pageSize"
-                [pageIndex] = "pageIndex" 
-                [pageSizeOptions]="[5, 10, 20, 100]"
-                (page) = "onPageChage($event)" >
+
+            <mat-paginator
+            [length]="data?.totalItems"
+            [pageSize]="pageSize"
+            [pageIndex] = "pageIndex" 
+            [pageSizeOptions]="[5, 10, 20, 100]"
+            (page) = "paganatorData.next($event)"
+
+            
+            >
         </mat-paginator>
+    
     </ng-container>
 </div>
 
