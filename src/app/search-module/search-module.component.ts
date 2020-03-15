@@ -1,5 +1,5 @@
-import { Component, OnInit, ChangeDetectionStrategy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
-import { Observable, BehaviorSubject, Observer, fromEvent, from, of, combineLatest } from 'rxjs';
+import { Component, OnInit, ChangeDetectionStrategy, ViewChild, ElementRef, AfterViewInit, OnDestroy } from '@angular/core';
+import { Observable, BehaviorSubject, Observer, fromEvent, from, of, combineLatest, Subscription } from 'rxjs';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { BooksListService } from '../services/books-list.service';
 import { tap, debounceTime, switchMap, distinctUntilChanged, mergeAll, map } from 'rxjs/operators';
@@ -13,13 +13,13 @@ import { ISearch } from '../models/search.interface';
   styleUrls: ['./search-module.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class SearchModuleComponent implements OnInit, AfterViewInit {
+export class SearchModuleComponent implements OnInit, AfterViewInit , OnDestroy{
 
   public faSearch = faSearch;
   public data:any;
   public spinner: BehaviorSubject<boolean> = new BehaviorSubject(false);
   public selected: null;
-
+  private combineSub: Subscription;
   @ViewChild('searchInput') searchInput :ElementRef;
   paganatorData: BehaviorSubject<any> = new BehaviorSubject(null);
   constructor(private booksList: BooksListService, public dialog: MatDialog) { }
@@ -32,7 +32,7 @@ export class SearchModuleComponent implements OnInit, AfterViewInit {
   ngAfterViewInit(): void {
     //Called after ngAfterContentInit when the component's view has been initialized. Applies to components only.
     //Add 'implements AfterViewInit' to the class.
-   combineLatest(
+   this.combineSub = combineLatest(
     fromEvent(<HTMLInputElement>this.searchInput.nativeElement, "keyup").pipe(
       tap<any>(x => this.numInCombine = 0), 
       tap<any>(x => this.spinner.next(true)),
@@ -67,5 +67,22 @@ export class SearchModuleComponent implements OnInit, AfterViewInit {
     })
   }
   ngOnInit(): void {
+  }
+
+  ngOnDestroy(){
+    this.combineSub.unsubscribe();
+  }
+  onSelectBook(item:any) {
+    this.selected = item;
+    const dialogRef = this.dialog.open(BookDialogComponent, {
+      width: 'min-content',
+      minWidth:'24%',
+      data: this.selected
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      if(result){
+        this.booksList.favBooks.add(result);
+      }
+    });
   }
 }
