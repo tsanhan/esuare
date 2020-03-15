@@ -33,15 +33,15 @@ export class SearchModuleComponent implements OnInit, AfterViewInit , OnDestroy{
     //Called after ngAfterContentInit when the component's view has been initialized. Applies to components only.
     //Add 'implements AfterViewInit' to the class.
    this.combineSub = combineLatest(
-    fromEvent(<HTMLInputElement>this.searchInput.nativeElement, "keyup").pipe(
+    fromEvent<KeyboardEvent>(<HTMLInputElement>this.searchInput.nativeElement, "keyup").pipe(
       tap<any>(x => this.numInCombine = 0), 
       tap<any>(x => this.spinner.next(true)),
        debounceTime(1000),
-       switchMap(x => {
+       switchMap((x:KeyboardEvent) => {
          
           return this.booksList.getData({
             pageSize: this.pageSize,
-            searchTerm: this.searchInput.nativeElement.value,
+            searchTerm: (<HTMLInputElement>x.srcElement).value,
             startIndex: this.pageIndex
            });
         }),
